@@ -1,0 +1,106 @@
+============================================================
+                         RELAZIONE
+============================================================
+PROJECT TITLE: SECURE-BORDER NETWORK ARCHITECTURE
+DESIGNER: Network & Security Architect
+DEVELOPMENT TIME: ~7 Hours (Calculations & CLI)
+COMPLEXITY LEVEL: CCNA Advanced / CCNP Enterprise Core
+============================================================
+
+1. INTRODUZIONE E OBIETTIVI DEL PROGETTO
+Il presente progetto descrive l'ingegnerizzazione e 
+l'implementazione di un'infrastruttura di rete aziendale 
+Enterprise distribuita geograficamente. L'architettura e' 
+stata sviluppata per soddisfare i requisiti di scalabilita', 
+alta affidabilita' e sicurezza interna richiesti dai moderni 
+scenari industriali. Il sistema interconnette una Sede 
+Centrale (HQ), deputata alla gestione dei servizi interni e 
+del server aziendale, e una Sede Periferica (Branch), destinata 
+ai reparti distaccati. Il perimetro aziendale si interfaccia 
+inoltre con un fornitore di servizi Internet esterno (ISP). 
+La progettazione adotta il paradigma Zero-Trust, isolando 
+i segmenti produttivi critici e minimizzando i domini di 
+broadcast.
+
+2. PIANO DI INDIRIZZAMENTO E ALGORITMO VLSM
+Per ottimizzare lo spazio di indirizzamento IP (RFC 1918) ed 
+evitare lo spreco di host, e' stato applicato l'algoritmo VLSM. 
+La rete interna e' stata rigidamente segmentata.
+• Sede Centrale (HQ) - Blocco: 192.168.1.0/24
+  - VLAN 10 (Amministrazione): 192.168.1.0/25 (Gateway: .1)
+  - VLAN 20 (Produzione): 192.168.1.128/26 (Gateway: .129)
+  - VLAN 30 (Server Farm): 192.168.1.192/29 (Gateway: .193)
+    Ospita il Server Aziendale su IP statico 192.168.1.194.
+  - Link Transito Interno (CORE-ROUTER): 192.168.1.200/30
+• Sede Periferica (Branch) - Blocco: 192.168.2.0/24
+  - Interfaccia Gig0/1 (Amministrazione): 192.168.2.0/26 (GW: .1)
+  - Interfaccia Gig0/2 (Produzione): 192.168.2.64/26 (GW: .65)
+• Dorsale WAN Geografica Punto-Punto
+  - Link Diretto HQ-Branch: 192.168.2.192/30
+    (IP HQ Gig0/0: .193 | IP Branch Gig0/0: .194)
+
+3. ARCHITETTURA DI RETE E FLUSSI DI TRAFFICO
+• Core LAN (HQ): La commutazione inter-VLAN e' affidata allo 
+  switch Multilayer HQ-CORE. La porta fisica Gig0/1 e' una 
+  Routed Port Layer 3 pura (no switchport), che abbatte la 
+  latenza ed esclude l'overhead del protocollo Spanning Tree.
+• Routing Dinamico (OSPFv2): L'instradamento e' affidato a 
+  OSPFv2 (Processo 1, Area 0 Backbone). L'adiacenza tra i due 
+  router di confine (HQ-ROUTER e BORDER-ROUT) e' stabilita 
+  sulla porta fisica diretta (Stato: FULL). Le tabelle di 
+  routing vengono scambiate dinamicamente, rendendo le reti 
+  della filiale raggiungibili dalla Sede Centrale.
+• Border Gateway (eBGP e NAT): Il router HQ-ROUTER gestisce il 
+  perimetro. Tramite una sessione eBGP attiva con l'ISP (AS 
+  privato 65001 vs AS pubblico 100) apprende la rotta di 
+  default (0.0.0.0/0). Questa viene iniettata in OSPF via 
+  default-information originate. La navigazione internet e' 
+  garantita dal NAT/PAT Overload attivo sull'interfaccia 
+  pubblica (Gig0/1 inside, Gig0/2 outside).
+
+4. IMPLEMENTAZIONE DELLE POLITICHE DI SICUREZZA (ACL)
+L'intera rete e' governata da una politica difensiva volta a 
+proteggere l'integrita' dei dati sensibili aziendali.
+• Sicurezza LAN (HQ): Sullo switch HQ-CORE e' applicata l'ACL 
+  Estesa 110 in ingresso (in) sulla Vlan20. La lista blocca 
+  la Produzione verso l'Amministrazione centrale e verso il 
+  Server Aziendale (192.168.1.194). Il traffico verso Internet 
+  e' permesso tramite l'istruzione permit ip any any.
+• Sicurezza WAN (Branch): Sul router BORDER-ROUT e' configurata 
+  un'ACL Estesa 110 in ingresso (in) sulla porta fisica della 
+  Produzione (Gig0/2). Blocca l'accesso alla Produzione locale 
+  verso l'Amministrazione locale e verso il Server di HQ. I 
+  pacchetti non autorizzati vengono distrutti alla sorgente, 
+  risparmiando preziosa banda sul link WAN geografico.
+
+5. SERVIZI DI INFRASTRUTTURA (DHCP POOLS)
+La Sede Periferica distribuisce gli IP automaticamente. Il 
+router BORDER-ROUT agisce come server DHCP locale configurando 
+due pool distinti associati alle porte fisiche di reparto:
+• Pool DHCP_AMMI_BRANCH -> Assegnazione dinamica range .2 - .62
+• Pool DHCP_PROD_BRANCH -> Assegnazione dinamica range .66 - .126
+Gli indirizzi dei Gateway (.1 e .65) sono stati inseriti nel 
+comando ip dhcp excluded-address per prevenire conflitti.
+
+6. VERIFICA E COLLAUDO (TROUBLESHOOTING)
+L'efficacia del sistema e' stata validata su CLI:
+• show ip ospf neighbor: Certifica l'adiacenza OSPF nello 
+  stato FULL sia all'interno della LAN sia sul link WAN.
+• show ip route: Evidenzia l'apprendimento della rotta di 
+  default esterna su HQ-CORE tramite la stringa O*E2.
+• show ip dhcp binding: Conferma l'erogazione degli IP ai 
+  PC della filiale legati ai rispettivi MAC Address.
+• Ping Test: I PC dell'Amministrazione raggiungono il Server 
+  con lo 0% di pacchetti persi. I PC della Produzione vengono 
+  bloccati con stringa 'Destination host unreachable'.
+
+7. PROJECT METADATA & NOTE SULLO SVILUPPO
+• Tempo di Sviluppo: ~7 Ore complessive.
+• Tasso di Successo (SLA): 100% di pacchetti consegnati sulle 
+  tratte autorizzate e blocco immediato su quelle negate.
+Il tempo impiegato e' stato ripartito tra la pianificazione 
+ingegneristica degli indirizzi, la scrittura dello script 
+CLI e un'attivita' di troubleshooting volta a bypassare i 
+vincoli hardware del simulatore per garantire la massima 
+stabilita' e convergenza del network.
+============================================================

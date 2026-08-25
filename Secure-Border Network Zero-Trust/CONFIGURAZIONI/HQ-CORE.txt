@@ -1,0 +1,177 @@
+HQ-CORE>en
+HQ-CORE#show running-config
+Building configuration...
+
+Current configuration : 2613 bytes
+!
+version 12.2(37)SE1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname HQ-CORE
+!
+!
+no profinet
+!
+!
+ip dhcp excluded-address 192.168.1.1 192.168.1.10
+ip dhcp excluded-address 192.168.1.129 192.168.1.138
+!
+ip dhcp pool AMMINISTRAZIONE_10
+ network 192.168.1.0 255.255.255.128
+ default-router 192.168.1.1
+ dns-server 8.8.8.8
+ip dhcp pool PRODUZIONE_20
+ network 192.168.1.128 255.255.255.192
+ default-router 192.168.1.129
+ dns-server 8.8.8.8
+!
+!
+ip routing
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+spanning-tree mode pvst
+!
+!
+!
+!
+!
+!
+interface FastEthernet0/1
+ no switchport
+ no ip address
+ duplex auto
+ speed auto
+!
+interface FastEthernet0/2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface FastEthernet0/3
+!
+interface FastEthernet0/4
+!
+interface FastEthernet0/5
+ --More-- 
+04:47:16: %OSPF-5-ADJCHG: Process 1, Nbr 1.1.1.1 on GigabitEthernet0/1 from LOADING to FULL, Loading Done
+ switchport access vlan 30
+ switchport mode access
+!
+interface FastEthernet0/6
+!
+interface FastEthernet0/7
+!
+interface FastEthernet0/8
+!
+interface FastEthernet0/9
+!
+interface FastEthernet0/10
+!
+interface FastEthernet0/11
+!
+interface FastEthernet0/12
+!
+interface FastEthernet0/13
+!
+interface FastEthernet0/14
+!
+interface FastEthernet0/15
+!
+interface FastEthernet0/16
+!
+interface FastEthernet0/17
+!
+interface FastEthernet0/18
+!
+interface FastEthernet0/19
+!
+interface FastEthernet0/20
+!
+interface FastEthernet0/21
+!
+interface FastEthernet0/22
+!
+interface FastEthernet0/23
+!
+interface FastEthernet0/24
+!
+interface GigabitEthernet0/1
+ no switchport
+ ip address 192.168.1.202 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/2
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan10
+ mac-address 0060.5ccb.b801
+ ip address 192.168.1.1 255.255.255.128
+!
+interface Vlan20
+ mac-address 0060.5ccb.b802
+ ip address 192.168.1.129 255.255.255.192
+!
+interface Vlan30
+ mac-address 0060.5ccb.b803
+ ip address 192.168.1.193 255.255.255.248
+!
+interface Vlan90
+ mac-address 0060.5ccb.b804
+ no ip address
+!
+router ospf 1
+ router-id 2.2.2.2
+ log-adjacency-changes
+ network 192.168.1.200 0.0.0.3 area 0
+ network 192.168.1.0 0.0.0.127 area 0
+ network 192.168.1.128 0.0.0.63 area 0
+ network 192.168.1.192 0.0.0.7 area 0
+!
+ip classless
+!
+ip flow-export version 9
+!
+!
+access-list 110 deny ip 192.168.1.128 0.0.0.63 host 192.168.1.194
+access-list 110 permit tcp 192.168.1.128 0.0.0.63 192.168.1.0 0.0.0.127 eq 443
+access-list 110 permit tcp 192.168.1.0 0.0.0.63 192.168.1.0 0.0.0.127 eq smtp
+access-list 110 deny ip 192.168.1.128 0.0.0.63 192.168.1.0 0.0.0.127
+access-list 110 permit ip any any
+!
+!
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+!
+!
+!
+end
+
+
+HQ-CORE#    

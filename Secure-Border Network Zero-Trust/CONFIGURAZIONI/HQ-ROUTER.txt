@@ -1,0 +1,114 @@
+HQ-router#show running-config
+Building configuration...
+
+Current configuration : 1406 bytes
+!
+version 15.1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname HQ-router
+!
+!
+!
+!
+!
+!
+!
+!
+no ip cef
+no ipv6 cef
+!
+!
+!
+!
+license udi pid CISCO2911/K9 sn FTX1524SQOI-
+license boot module c2900 technology-package securityk9
+!
+!
+!
+crypto isakmp key Password123 address 192.168.2.194
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+spanning-tree mode pvst
+!
+!
+!
+!
+!
+!
+interface Tunnel0
+ ip address 10.0.0.1 255.255.255.252
+ mtu 1476
+ tunnel destination 192.168.2.194
+!
+!
+interface GigabitEthernet0/0
+ ip address 192.168.2.193 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/1
+ ip address 192.168.1.201 255.255.255.252
+ ip nat inside
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/2
+ ip address 203.0.113.2 255.255.255.252
+ ip nat outside
+ duplex auto
+ speed auto
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+router ospf 1
+ router-id 1.1.1.1
+ log-adjacency-changes
+ network 192.168.1.200 0.0.0.3 area 0
+ network 203.0.113.0 0.0.0.3 area 0
+ network 192.168.1.200 0.0.0.0 area 0
+ network 10.0.0.0 0.0.0.3 area 0
+ network 192.168.2.192 0.0.0.3 area 0
+ default-information originate
+!
+router bgp 65001
+ bgp log-neighbor-changes
+ no synchronization
+ neighbor 203.0.113.1 remote-as 100
+!
+ip classless
+!
+ip flow-export version 9
+!
+!
+access-list 1 permit 192.168.1.0 0.0.0.255
+!
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+!
+!
+end
+
+
+HQ-router#  
